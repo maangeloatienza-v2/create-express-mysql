@@ -13,7 +13,8 @@ const reqBody = {
     last_name: '',
     email: '',
     password: '',
-    phone_number: ''
+    phone_number: '',
+    _role_id : ''
 };
 
 const optBody = {
@@ -22,7 +23,8 @@ const optBody = {
     _last_name: '',
     _email: '',
     _password: '',
-    _phone_number: ''
+    _phone_number: '',
+    _role_id : ''
 };
 
 
@@ -47,6 +49,18 @@ const index = (req,res,next)=> {
     if (sort_id) {
         where += `
             ORDER BY ${sort_id} ${sort_desc ? sort_desc : ASC}
+        `;
+    }
+
+    if (first_name) {
+        where += `
+            AND user.first_name = '${first_name}'
+        `;
+    }
+
+    if (last_name) {
+        where += `
+            AND user.last_name = '${last_name}'
         `;
     }
 
@@ -89,7 +103,7 @@ const index = (req,res,next)=> {
                 page,
                 limit,
                 message: data.length ? 'Sucessfully retrieved users' : NO_RESULTS
-            }, data.length ? 200 : 404);
+            }, data.length ? 200 : 204);
         }
     });
 }
@@ -107,7 +121,7 @@ const show = (req, res, next) => {
             else Global.success(res, {
                 data,
                 message: data ? 'Sucessfully retrieved users' : NO_RESULTS
-            }, data?200:404);
+            }, data? 200 : 204);
         }
     });
 }
@@ -125,37 +139,91 @@ const store = (req,res,next) => {
         },500);
     }
 
+    let where = ` WHERE 
+                    user.deleted IS null 
+                AND 
+                    username='${data.username}' 
+                OR 
+                    email='${data.email}'`;
+
     data.id = uuidv4();
     data.created = new Date();
 
-    bcrypt.genSalt(10, (error, salt)=> {
-        bcrypt.hash(data.password, salt, (fail, hash)=> {
-            data.password = hash;
 
+    User.index({
+        where,
+        result: (err, userData) => {
+            if (err) Global.fail(res, {
+                message: FAILED_FETCH,
+                context: err
+            }, 500);
 
-            if(fail) {
-                Global.fail(res,{
-                    message: FAILED_TO_CREATE,
-                    context : fail
-                },500);
+            if (userData.length) {
+                return Global.fail(res, {
+                    message: 'Username/email already exists',
+                    context: ALREADY_EXISTS
+                }, 204)
             }
 
-            User.store({
-                body: data,
-                result: (err, data)=> {
-                    if (err) Global.fail(res, {
-                        message: FAILED_TO_CREATE
-                    }, 500);
 
-                    else Global.success(res, {
-                        data,
-                        message: data ? 'Sucessfully created user' : FAILED_TO_CREATE
-                    }, data ? 200 : 400);
-                }
-            })
-           
-        });
+            bcrypt.genSalt(10, (error, salt) => {
+                bcrypt.hash(data.password, salt, (fail, hash) => {
+                    data.password = hash;
+
+                    if (fail) {
+                        Global.fail(res, {
+                            message: FAILED_TO_CREATE,
+                            context: fail
+                        }, 500);
+                    }
+
+                    User.store({
+                        body: data,
+                        result: (err, data) => {
+                            if (err) Global.fail(res, {
+                                message: FAILED_TO_CREATE
+                            }, 500);
+
+                            else Global.success(res, {
+                                data,
+                                message: data ? 'Sucessfully created user' : FAILED_TO_CREATE
+                            }, data ? 200 : 400);
+                        }
+                    })
+
+                });
+            });
+        }
     });
+
+    // bcrypt.genSalt(10, (error, salt)=> {
+    //     bcrypt.hash(data.password, salt, (fail, hash)=> {
+    //         data.password = hash;
+
+
+    //         if(fail) {
+    //             Global.fail(res,{
+    //                 message: FAILED_TO_CREATE,
+    //                 context : fail
+    //             },500);
+    //         }
+
+    //         User.store({
+    //             body: data,
+    //             result: (err, data)=> {
+    //                 if (err) Global.fail(res, {
+    //                     message: FAILED_TO_CREATE
+    //                 }, 500);
+
+    //                 else Global.success(res, {
+    //                     data,
+    //                     message: data ? 'Sucessfully created user' : FAILED_TO_CREATE
+    //                 }, data ? 200 : 400);
+    //             }
+    //         })
+           
+    //     });
+    // });
 }
 
 const update = (req, res, next) => {

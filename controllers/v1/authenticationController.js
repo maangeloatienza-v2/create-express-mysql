@@ -24,7 +24,10 @@ const login = (req,res,next)=> {
     }
 
     let where = `
-        WHERE user.username = '${data.username}' 
+        WHERE 
+            user.username = '${data.username}'
+        AND
+            user.deleted IS null
     `;
 
     User.index({
@@ -35,6 +38,11 @@ const login = (req,res,next)=> {
             if (err) Global.fail(res, {
                 message: FAILED_FETCH,
                 context: err
+            }, 500);
+
+            if (!user.length) return Global.fail(res, {
+                message: 'Invalid credentials!',
+                context: INV_INPUT
             }, 500);
             
             bcrypt.compare(data.password, user[0].password, (fail, success) => {

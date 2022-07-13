@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const SetupDB = require('./database/config');
 const routes = require('./routes/routes');
+const helmet =require('helmet');
 const app = express();
 
 require('dotenv').config();
@@ -18,7 +19,7 @@ SetupDB.connect(configurationSetting);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: false, parameterLimit: 50000, type: '*/x-www-form-urlencoded' }));
-
+app.use(helmet());
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
