@@ -19,9 +19,9 @@
     "anytv-node-importer": "0.0.7",
     "anytv-node-mysql": "^0.0.55",
     "bcryptjs": "^2.4.3",
-    "body-parser": "^1.19.0",
+    "body-parser": "^1.20.1",
     "dotenv": "^8.2.0",
-    "express": "^4.17.1",
+    "express": "^4.18.2",
     "jsonwebtoken": "^8.5.1",
     "parse-error": "^0.2.0",
     "uuid": "^8.1.0"
